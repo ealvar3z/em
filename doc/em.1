@@ -1,0 +1,79 @@
+.TH EM 1 "" "em 1.1.0" "User Commands"
+.SH NAME
+em \- editor for mortals (Unix v6-derived line editor)
+.SH SYNOPSIS
+.B em
+.RI [ -qeps ]
+.RI [ file ]
+.SH DESCRIPTION
+.B em
+is a line-oriented editor with a raw line editing mode (the
+.BR o
+command). It is based on the Unix v6 editor lineage and includes the
+historical QMC extensions (prompts, screen context, and the
+.BR o
+command).
+.PP
+The raw
+.B o
+editor uses control keys for in-line editing and supports a built-in help
+screen (command
+.BR h )
+via the installed emhelp file.
+.SH OPTIONS
+.TP
+.B -q
+Restore default SIGHUP handling (do not ignore hangup).
+.TP
+.B -e
+"Elfic" mode: disables explicit write commands and auto-writes on quit.
+.TP
+.B -p
+Enable prompting.
+.TP
+.B -s
+Silent mode (no prompts).
+.PP
+If the program name ends in 'm', prompts are enabled by default. Supplying
+just a lone '-' also selects silent mode.
+.SH COMMANDS
+This editor is command-driven; use
+.B h
+for the built-in help screen. The
+.B o
+command opens a raw line editor for the current line or range. In
+.B o
+mode, typed characters echo immediately;
+.B #
+(or
+.BR ^X )
+removes a character with a full-line redraw for visual feedback. Use
+.B ESC
+or
+.B ^D
+to finish.
+.SH FILES
+.TP
+.I /tmp/emXXXXXX
+Temporary file for the edit buffer.
+.TP
+.I $(datadir)/em/emhelp
+Help text for the
+.B h
+command.
+.SH BUILD
+.nf
+./configure
+make
+make install
+.fi
+.SH PORTERS
+Prefer
+.B make distcheck
+before packaging. Respect DESTDIR and prefix during install.
+.SH BUGS
+Please report issues with a minimal reproducible example and environment
+details (OS, compiler version, and terminal).
+.SH HISTORY
+Ken Thompson original editor. QMC modifications (Coulouris, 1976).
+Modern POSIX/C99 port (2012). C23 port and tooling updates (2025).
