@@ -89,7 +89,6 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = em$(EXEEXT)
-am__append_1 = -DHAVE_LIBEDIT
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -104,8 +103,7 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_em_OBJECTS = em1.$(OBJEXT) em2.$(OBJEXT)
 em_OBJECTS = $(am_em_OBJECTS)
-am__DEPENDENCIES_1 =
-em_DEPENDENCIES = $(am__DEPENDENCIES_1)
+em_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -188,7 +186,6 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
-LIBEDIT_LIBS = -ledit
 LIBOBJS = 
 LIBS = 
 LTLIBOBJS = 
@@ -252,9 +249,8 @@ target_alias =
 top_build_prefix = ../
 top_builddir = ..
 top_srcdir = ..
-AM_CPPFLAGS = -DHELP_PATH=\"$(datadir)/em/emhelp\" $(am__append_1)
+AM_CPPFLAGS = -DHELP_PATH=\"$(datadir)/em/emhelp\"
 em_SOURCES = em1.c em2.c
-em_LDADD = $(LIBEDIT_LIBS)
 all: all-am
 
 .SUFFIXES:

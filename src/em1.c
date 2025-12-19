@@ -38,6 +38,9 @@ bugs:
 
 #include <assert.h>
 #include <stdbool.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,7 +129,7 @@ int	col;
 char	*globp;
 int	tfile =	-1;
 int	tline;
-char	tfname[11];
+char	tfname[64];
 char	*loc1;
 char	*loc2;
 char	*locs;
@@ -194,11 +197,24 @@ void setnoaddr(void);
 void substitute(size_t inglob);
 void underline (char *line, char *l1,char * l2,char * score);
 void callunix(void);
+static void usage(const char *prog);
+static void print_version(void);
 
 int main(int argc, char *argv[argc + 1])
 {
 	register char *p1, *p2;
-        
+
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--help") == 0) {
+			usage(argv[0]);
+			return 0;
+		}
+		if (strcmp(argv[i], "--version") == 0) {
+			print_version();
+			return 0;
+		}
+	}
+
         struct sigaction    act;
         act.sa_handler = SIG_IGN;
         sigemptyset(&act.sa_mask);
@@ -1062,25 +1078,42 @@ void blkio(int b, char *buf,  ssize_t (*iofcn)(int,  void *, size_t))
 
 void init(void)
 {
-	register char *p;
-	register int pid;
+	int fd;
+	const char *template = "/tmp/emXXXXXX";
 
-	close(tfile);
+	if (tfile >= 0)
+		close(tfile);
 	tline = 0;
 	iblock = -1;
 	oblock = -1;
-	memcpy( &tfname[0], "/tmp/exxxxx",11);
 	ichanged = 0;
-	pid = getpid();
-	for (p = &tfname[11]; p > &tfname[6];) {
-		*--p = (pid&07) + '0';
-		pid >>= 3;
+	strncpy(tfname, template, sizeof(tfname) - 1);
+	tfname[sizeof(tfname) - 1] = '\0';
+	fd = mkstemp(tfname);
+	if (fd < 0) {
+		putstr(TMPERR);
+		error;
 	}
-	close(creat(tfname, 0600));
-	tfile = open(tfname, 2);
+	tfile = fd;
 	/* brk(fendcore); */
 	dot = dol = zero; /* = dol = fendcore; */
 	/* endcore = fendcore - 2; */
+}
+
+static void usage(const char *prog)
+{
+	fprintf(stderr, "usage: %s [-qeps] [file]\n", prog);
+	fprintf(stderr, "       %s --help\n", prog);
+	fprintf(stderr, "       %s --version\n", prog);
+}
+
+static void print_version(void)
+{
+#ifdef PACKAGE_VERSION
+	printf("em %s\n", PACKAGE_VERSION);
+#else
+	printf("em (unknown version)\n");
+#endif
 }
 
 void global(int k)
