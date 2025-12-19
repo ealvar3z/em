@@ -11,6 +11,7 @@ m   move line(s)			?   delimit backward
 l   list line(s)				search string
 o   open line(s) for mods		!   unix command
 	(^H for help in 'o')		=   line number
+	(#/^X delete, ESC/^D finish)
 o\  replace line(s)			>   prompts off
 o-  insert new lines			%   display context
 o+  append new lines			&   .-16,.p

@@ -1,0 +1,39 @@
+NEWS
+
+Backlog / C23 Port Plan
+
+Scope
+- Source code: src/em1.c, src/em2.c.
+- Build system: configure.ac, configure, Makefile.am, Makefile.in, src/Makefile.am,
+  src/Makefile.in, doc/Makefile.in.
+
+Steps
+1. Code audit for C23 incompatibilities in src/.
+   - Fix non-standard main signatures.
+   - Replace old-style or empty parameter list declarations with full prototypes.
+   - Remove or rename macros that collide with standard headers.
+   - Ensure functions are declared before use (no implicit int / implicit decls).
+   - Verify type usage for size_t, ssize_t, sigjmp_buf, etc.
+
+2. Update source to C23 style and safety.
+   - Make function pointer signatures explicit.
+   - Normalize prototypes so declarations match definitions.
+   - Remove legacy constructs obsoleted in C23.
+   - Keep behavior unchanged; limit refactors to compatibility fixes.
+
+3. Update Autotools to request C23.
+   - Replace AC_PROG_CC_STDC with AC_PROG_CC.
+   - Probe for -std=c23 (fallback to gnu23/c2x) and set CFLAGS.
+   - Regenerate configure and Makefile.in files via autoreconf -fi.
+
+4. Verify build and runtime basics.
+   - Run ./configure and make with the new flags.
+   - Smoke-test ./src/em with a small file.
+
+Deliverables
+- Updated src/*.c C23-compatible source.
+- Updated Autotools inputs and regenerated outputs.
+- Optional: note in README or NEWS about the C23 port.
+
+Feature Branches
+- feat/o-editor-visual-backspace: visual feedback for deletes in the o raw editor.

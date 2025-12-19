@@ -1,0 +1,38 @@
+# Autotools/cache outputs
+/autom4te.cache/
+/config.log
+/config.status
+/config.h
+/stamp-h1
+/compile
+
+# Build artifacts
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+*.gcno
+*.gcda
+*.gcov
+.deps/
+/src/.deps/
+/src/em
+em-*.tar.gz
+*.tar.gz
+
+# Editor/backup files
+*~
+*.swp
+*.swo
+tags
+TAGS
+
+# Local reference files
+/doc/modernC.pdf
+/configure~
+/config.h.in~

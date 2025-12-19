@@ -1,0 +1,25 @@
+Thu Dec 18 10:43:41 PM EST 2025
+===============================
+Per `doc/modernC.pdf`, the following concrete C23‑aligned recommendations for this codebase:
+
+  - Use C23 attributes where they convey intent. C23's [[maybe_unused]] on
+    parameters like argv. In this codebase, `onintr(int signo)` doesn’t use
+`signo`, so `onintr([[maybe_unused]] int signo)` in `src/em1.c` would be a
+clear, standard C23 annotation.
+  - Keep the C23 “VLA argv” main signature (already done) to document the argc
+    + 1 relationship, exactly as the book demonstrates.
+  - Consider switching flag‑style globals from int to bool with true/false (now
+    keywords in C23).  Candidates: elfic, vflag (maybe as tri‑state?), xflag,
+pflag, listf. This improves readability and matches modern C idioms.
+  - Add compile‑time invariants with static_assert (or constexpr where
+    appropriate) for assumptions like buffer sizes (LBSIZE, ESIZE, NBRA),
+improving self‑documentation.
+  - Keep int for character input paths returning EOF (DONE: already fixed
+    `getchr`). It’s a Modern C best practice to avoid truncation of EOF.
+
+  Suggestions:
+
+  1. Apply [[maybe_unused]] to unused parameters first (low risk).
+  2. Convert simple flag globals to bool.
+  3. Add static_assert for buffer size invariants.
+

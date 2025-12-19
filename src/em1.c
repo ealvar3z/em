@@ -24,6 +24,7 @@
 		(the help is in /usr/lib/emhelp)
 
     Port to modern unix (posix, c99) pierre.gaston@gmail.com 2012
+    Port to modern standard (posix, c23) e.alvarez@mac.com 2025
 
 bugs:
 	should not use printf in substitute()
@@ -33,6 +34,10 @@ bugs:
 /* this file contains all of the code except that used in the 'o' command.
 	that is in a second segment called em2.c */
 
+#define _POSIX_C_SOURCE 200809L
+
+#include <assert.h>
+#include <stdbool.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,10 +87,13 @@ bugs:
 
 #define UNIXBUFL 100
 
+static_assert(LBSIZE > ESIZE, "LBSIZE must exceed ESIZE");
+static_assert(NBRA > 0, "NBRA must be positive");
+
 extern int margin;	/* used to set threshold in 'open' */
 
-int	elfic	= 0;	/* true if "elfic" (-e) flag */
-int firstime	= 1;	/* ugh - used to frigg initial "read" */
+bool	elfic	= false;	/* true if "elfic" (-e) flag */
+bool firstime	= true;	/* ugh - used to frigg initial "read" */
 int	peekc;
 int	lastc;
 char	unixbuffer [UNIXBUFL];
@@ -108,12 +116,12 @@ char	*nextip;
 char	*linebp;
 int	ninbuf;
 int	io;
-int	pflag;
+bool	pflag;
 struct sigaction	onhup;
 struct sigaction	onquit;
 int	vflag	= 0;
-int	xflag	= 0;	/*used in 'xchange' command */
-int	listf;
+bool	xflag	= false;	/*used in 'xchange' command */
+bool	listf;
 int	col;
 char	*globp;
 int	tfile =	-1;
@@ -144,50 +152,50 @@ void putch(char ch);
 /* forward declaration */
 int * address();
 int advance(char* alp,char* aep);
-int append(int (*f)(), int *a);
+int append(int (*f)(void), int *a);
 void  blkio(int b, char *buf,  ssize_t (*iofcn)(int, void *, size_t));
 void breaks( char *p);
 int cclass(char *aset, char ac, int af);
 void commands(int prompt);
 void compile(int aeof);
-int compsub(); 
-int confirmed();
-void delete();
-void donothing();
-void dosub();
-void errfunc();
+int compsub(void); 
+int confirmed(void);
+void delete(void);
+void donothing(void);
+void dosub(void);
+void errfunc(void);
 int execute(int gf,int* addr);
-void exfile();
-void filename();
+void exfile(void);
+void filename(void);
 char* getblock(int atl,int  iof);
-char getchr();
-int getcopy(); 
-int getfile();
+int getchr(void);
+int getcopy(void); 
+int getfile(void);
 char *em_getline(int tl);
-int getsub(); 
-int gettty();
+int getsub(void); 
+int gettty(void);
 void global(int k);
-void init();
+void init(void);
 void move(int cflag);
-void newline();
-void nonzero();
-void onintr(int );
+void newline(void);
+void nonzero(void);
+void onintr([[maybe_unused]] int signo);
 char *place(char *asp, char *al1,char * al2);
 void putchr(int ac);
-void putd();
-void putfile();
-int putline();
+void putd(void);
+void putfile(void);
+int putline(void);
 void putstr(char *as);
 void reverse(int *aa1, int *aa2);
-void screensplit();
-void setall();
-void setdot();
-void setnoaddr();
+void screensplit(void);
+void setall(void);
+void setdot(void);
+void setnoaddr(void);
 void substitute(size_t inglob);
 void underline (char *line, char *l1,char * l2,char * score);
-void callunix();
+void callunix(void);
 
-void main(int argc, char **argv)
+int main(int argc, char *argv[argc + 1])
 {
 	register char *p1, *p2;
         
@@ -198,35 +206,41 @@ void main(int argc, char **argv)
 
         sigaction(SIGQUIT, &act , &onquit);
         sigaction(SIGHUP, &act, &onhup);
-        int lastc = 0;
-        while (*(*argv+lastc+1) != '\0') lastc++;
-	if(*(*argv+lastc) == 'm') vflag = 1;
-	argv++;
-	if (argc > 1 && **argv=='-') {
-		p1 = *argv+1;
-		while (*p1) {
-			switch (*p1++) {
-		case 'q':
-                                sigaction(SIGHUP, (struct sigaction*)SIG_DFL, &onhup);
-                                break;
-		case 'e':
-				elfic = 1;
-				break;
-		case 'p':
-				vflag = 0;
-				break;
-		case 's':
-				vflag = -1;
-				break;
-			}
-		}
-		if (!(*argv)[1])
-			vflag = -1;
-		argv++;
-		argc--;
+        size_t name_len = strlen(argv[0]);
+	if (name_len > 0 && argv[0][name_len - 1] == 'm')
+		vflag = 1;
+
+	if (argc > 1 && strcmp(argv[1], "-") == 0) {
+		vflag = -1;
+		optind = 2;
+	} else {
+		optind = 1;
 	}
-	if (argc>1) {
-		p1 = *argv;
+
+	for (;;) {
+		int opt = getopt(argc, argv, "qeps");
+		if (opt == -1)
+			break;
+		switch (opt) {
+		case 'q':
+			sigaction(SIGHUP, (struct sigaction*)SIG_DFL, &onhup);
+			break;
+		case 'e':
+			elfic = true;
+			break;
+		case 'p':
+			vflag = 0;
+			break;
+		case 's':
+			vflag = -1;
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (optind < argc) {
+		p1 = argv[optind];
 		p2 = savedfile;
 		while (*p2++ = *p1++);
 		breaks(p1-3);
@@ -251,6 +265,7 @@ void main(int argc, char **argv)
 	sigsetjmp(jmpbuf,1);
 	commands(vflag);
 	unlink(tfname);
+	return 0;
 }
 
 void commands(int prompt)
@@ -262,14 +277,14 @@ void commands(int prompt)
 
 	for (;;) {
 	if (pflag) {
-		pflag = 0;
+		pflag = false;
 		addr1 = addr2 = dot;
 		goto print;
 	}
 	if (prompt>0 && globp == 0) putch(PROMPT);
 	addr1 = 0;
 	addr2 = 0;
-	xflag = 0;
+	xflag = false;
 	do {
 		addr1 = addr2;
 		if ((a1 = address())==0) {
@@ -380,7 +395,7 @@ void commands(int prompt)
 		goto print;
 
 	case 'l':
-		listf++;
+		listf = true;
 	case 'p':
 		newline();
 	print:
@@ -391,7 +406,7 @@ void commands(int prompt)
 			putstr(em_getline(*a1++));
 		while (a1 <= addr2);
 		dot = addr2;
-		listf = 0;
+		listf = false;
 		continue;
 
  	case 'o':
@@ -403,7 +418,7 @@ void commands(int prompt)
 		setnoaddr();
 		newline();
 		if (elfic) {
-			firstime = 1;
+			firstime = true;
 			goto writeout;
 		}
 	quitit:
@@ -424,12 +439,12 @@ void commands(int prompt)
 		continue;
 
 	case 'x':
-		xflag = 1;
+		xflag = true;
 	case 's':
 		setdot();
 		nonzero();
 		substitute((size_t)globp);
-		xflag = 0;
+		xflag = false;
 		continue;
 
 	case 't':
@@ -635,7 +650,7 @@ int * address()
 	}
 }
 
-void setdot()
+void setdot(void)
 {
 	if (addr2 == 0)
 		addr1 = addr2 = dot;
@@ -643,7 +658,7 @@ void setdot()
 		error;
 }
 
-void setall()
+void setall(void)
 {
 	if (addr2==0) {
 		addr1 = zero+1;
@@ -654,19 +669,19 @@ void setall()
 	setdot();
 }
 
-void setnoaddr()
+void setnoaddr(void)
 {
 	if (addr2)
 		error;
 }
 
-void nonzero()
+void nonzero(void)
 {
 	if (addr1<=zero || addr2>dol)
 		error;
 }
 
-void newline()
+void newline(void)
 {
 	register int c;
 
@@ -674,16 +689,16 @@ void newline()
 		return;
 	c = c >= 'A' && c <= 'Z' ? c + 32 : c;
 	if (c=='p' || c=='l') {
-		pflag++;
+		pflag = true;
 		if (c=='l')
-			listf++;
+			listf = true;
 		if (getchr() == '\n')
 			return;
 	}
 	error;
 }
 
-void filename()
+void filename(void)
 {
 	register char *p1, *p2;
 	register int c;
@@ -694,7 +709,7 @@ void filename()
 		if (elfic && !firstime)
 			error;
 		else
-			firstime = 0;
+			firstime = false;
 		p1 = savedfile;
 		if (*p1==0)
 			error;
@@ -726,7 +741,7 @@ void breaks(char *p)
 		if(*p == 'r' || *p == 'n') margin = LENGTH -20;
 }
 
-void exfile()
+void exfile(void)
 {
 	close(io);
 	io = -1;
@@ -736,22 +751,22 @@ void exfile()
 	}
 }
 
-void onintr(int signo)
+void onintr([[maybe_unused]] int signo)
 {
 	putchr('\n');
 	lastc = '\n';
 	error;
 }
 
-void errfunc()
+void errfunc(void)
 {
 	register int c;
 
-	listf = 0;
+	listf = false;
 	putstr("?");
 	count = 0;
 	lseek(0, 0,  SEEK_END);
-	pflag = 0;
+	pflag = false;
 	if (globp)
           lastc = '\n';
 	globp = 0;
@@ -764,7 +779,7 @@ void errfunc()
 	siglongjmp(jmpbuf,1);
 }
 
-char getchr()
+int getchr(void)
 {
 	if (lastc=peekc) {
 		peekc = 0;
@@ -782,7 +797,7 @@ char getchr()
 	return(lastc);
 }
 
-int gettty()
+int gettty(void)
 {
        register int c;
        register char * gf;
@@ -808,7 +823,7 @@ int gettty()
 	return(0);
 }
 
-int getfile()
+int getfile(void)
 {
 	register int c;
 	register char *lp, *fp;
@@ -834,7 +849,7 @@ int getfile()
 	return(0);
 }
 
-void  putfile()
+void  putfile(void)
 {
 	int *a1;
 	register char *fp, *lp;
@@ -861,7 +876,7 @@ void  putfile()
 	write(io, genbuf, fp-genbuf);
 }
 
-int append(int (*f)(), int *a)
+int append(int (*f)(void), int *a)
 {
   register int *a1;
   register int *a2;
@@ -895,18 +910,19 @@ int append(int (*f)(), int *a)
 	return(nline);
 }
 
-void callunix()
+void callunix(void)
 {
 	register int  pid, rpid;
         struct sigaction   saveint;
 	int retcode;
-	char c,*lp,*fp;
+	int c;
+	char *lp,*fp;
 	pid = 0;
 	if ((c=getchr ()) != '!') {
 		lp = unixbuffer;
 		do {
 			if (c != '%')
-				*lp++ = c;
+				*lp++ = (char)c;
 			else {
 			pid = 1;
 				fp = savedfile;
@@ -941,7 +957,7 @@ void callunix()
 	putstr("!");
 }
 
-void delete()
+void delete(void)
 {
 	register int *a1, *a2, *a3;
 
@@ -976,7 +992,7 @@ char *em_getline(int tl)
 	return(linebuf);
 }
 
-int putline()
+int putline(void)
 {
 	register char *bp, *lp;
 	register int nl;
@@ -1044,7 +1060,7 @@ void blkio(int b, char *buf,  ssize_t (*iofcn)(int,  void *, size_t))
 	}
 }
 
-void init()
+void init(void)
 {
 	register char *p;
 	register int pid;
@@ -1148,7 +1164,7 @@ void substitute(size_t inglob)
 	if (nflag) printf( " %d \n", nn);
 }
 
-void donothing() {
+void donothing(void) {
 	char t1,t2;
 			t1 = rhsbuf[0];
 			t2 = rhsbuf[1];
@@ -1159,7 +1175,7 @@ void donothing() {
 			rhsbuf[1] = t2;
 }
 
-int confirmed()
+int confirmed(void)
 {
 int ch;
 	if(xflag) {
@@ -1194,7 +1210,7 @@ void underline (char *line, char *l1,char * l2,char * score)
 	}
 }
 
-void screensplit()
+void screensplit(void)
 {
 	register int a;
 
@@ -1203,7 +1219,7 @@ void screensplit()
         putchr('\n');
 }
 
-int compsub()
+int compsub(void)
 {
 	register int seof, c;
 	register char *p;
@@ -1239,7 +1255,7 @@ int compsub()
 	return(gsubf);
 }
 
-int getsub()
+int getsub(void)
 {
 	register char *p1, *p2;
 
@@ -1251,7 +1267,7 @@ int getsub()
 	return(0);
 }
 
-void dosub()
+void dosub(void)
 {
 	register char *lp, *sp, *rp;
 	int c;
@@ -1346,7 +1362,7 @@ void reverse(int *aa1, int *aa2)
 	}
 }
 
-int getcopy()
+int getcopy(void)
 {
 	if (addr1 > addr2)
 		return(EOF);
@@ -1606,7 +1622,7 @@ int cclass(char *aset, char ac, int af)
 	return(!af);
 }
 
-void putd()
+void putd(void)
 {
 	register int r;
 

@@ -1,29 +1,67 @@
-Port of em to modern OS 
-(http://www.eecs.qmul.ac.uk/~gc/history/)
+EM(1)
 
-From  http://en.wikipedia.org/wiki/Vi
+NAME
+    em - editor for mortals (Unix v6-derived line editor)
 
-"Coulouris considered the cryptic commands of ed to be only suitable
-for "immortals", and thus in February, 1976, he enhanced ed (using Ken
-Thompson's ed source as a starting point) to make em (the "editor for
-mortals") while acting as a lecturer at Queen Mary College.
+SYNOPSIS
+    em [-qeps] [file]
 
-The em editor was designed for display terminals and was a
-single-line-at-a-time visual editor. It was one of the first programs
-on Unix to make heavy use of "raw terminal input mode", in which the
-running program, rather than the terminal device driver, handled all
-keystrokes. When Coulouris visited UC Berkeley in the summer of 1976,
-he brought a DECtape containing em, and showed the editor to various
-people. Some people considered this new kind of editor to be a
-potential resource hog, but others, including Bill Joy were impressed"
+DESCRIPTION
+    em is a line-oriented editor with a visual raw-line editing mode (the
+    `o` command). It is based on the Unix v6 editor lineage and includes the
+    historical QMC extensions (prompts, screen context, and the `o` command).
 
-Inspired by em, and by their own tweaks to ed, Bill Joy and Chuck
-Haley, both graduate students at UC Berkeley, took code from em to
-make en, and then "extended" en to create ex version 0.1.
+    The raw `o` editor uses control keys for in-line editing and supports a
+    built-in help screen (command `h`) via the installed emhelp file.
 
-I used the unix v6 manpage conveniently available from:
-* http://man.cat-v.org/unix-6th/
-to figure out what the old function did.
+OPTIONS
+    -q  Restore default SIGHUP handling (do not ignore hangup).
+    -e  "Elfic" mode: disables explicit write commands and auto-writes on quit.
+    -p  Enable prompting.
+    -s  Silent mode (no prompts).
 
-Also useful was the v6 C reference manual:
-http://wwwlehre.dhbw-stuttgart.de/~helbig/os/v6/doc/index.html
+    If the program name ends in 'm', prompts are enabled by default. Supplying
+    a lone '-' also selects silent mode.
+
+COMMANDS
+    This editor is command-driven; use `h` for the built-in help screen. The
+    `o` command opens a raw line editor for the current line or range. In `o`
+    mode, typed characters echo immediately; `#` or `^X` deletes a character
+    with a full-line redraw for visual feedback. Use `ESC` or `^D` to finish.
+
+BUILD
+    ./configure
+    make
+
+    This codebase targets C23. Configure probes for a C23-capable compiler flag.
+
+INSTALL
+    make install
+
+    Installs the editor and help file to the configured prefix. You may need
+    elevated privileges (e.g., sudo) depending on the prefix.
+
+DISTCHECK
+    make distcheck
+
+    Runs the full distribution build/test cycle used by packagers. Some docs
+    refer to this as "makedistcheck", but the target is "distcheck".
+
+FILES
+    /tmp/exxxxx                temporary file for the edit buffer
+    $(datadir)/em/emhelp       help text for the `h` command
+
+HISTORY
+    - Ken Thompson original editor
+    - QMC modifications (Coulouris, 1976)
+    - Modern POSIX/C99 port (2012)
+    - C23 port and tooling updates (2025)
+
+PORTERS
+    - Prefer `make distcheck` before packaging.
+    - Respect DESTDIR and prefix during install.
+    - Help file installs to $(datadir)/em/emhelp.
+
+BUGS
+    Please report issues with a minimal reproducible example and environment
+    details (OS, compiler version, and terminal).
