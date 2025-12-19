@@ -1,10 +1,6 @@
 #
 /*	This is the second and final segment of the QMC Unix Editor - em */
-#define EOF -1
 #define LBSIZE	512
-#define	SIGHUP	1
-#define	SIGINTR	2
-#define	SIGQUIT	3
 #define UNIXBUFL 100
 #define	error  errfunc() /*goto errlab pgas: don't think you can goto a pointer label in modern C*/
 #define TABSET	7	/* this should be determined dynamically */
@@ -35,42 +31,45 @@
 
 #define ITT	0100000
 
+#define _POSIX_C_SOURCE 200809L
+
+#include <signal.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
 
 
-extern char	peekc, *linebp, *loc2, linebuf[LBSIZE], genbuf[LBSIZE],
+extern int	peekc;
+extern char	*linebp, *loc2, linebuf[LBSIZE], genbuf[LBSIZE],
 			unixbuffer[UNIXBUFL];
 extern struct sigaction	onhup;
 extern struct sigaction	onquit;
 extern int	*zero, *addr1, *addr2;
-extern int	*errlab;
 
 /*extern */
-int append(int (*f)(), int *a);
+int append(int (*f)(void), int *a);
 void compile(int aeof);
-void errfunc();
+void errfunc(void);
 int execute(int gf,int* addr);
-void delete();
+void delete(void);
 char *em_getline(int tl);
-void setdot();
-void nonzero();
-int putline();
+void setdot(void);
+void nonzero(void);
+int putline(void);
 void putchr(int ac);
 void putstr(char *as);
-char getchr();
+int getchr(void);
 
 
 /* forward declaration */
-void setraw();
-void setcook();
-int getnil();
-int getopen();
-int gopen();
-void help();
+void setraw(void);
+void setcook(void);
+int getnil(void);
+int getopen(void);
+int gopen(void);
+void help(void);
 void putb(char *ptr);
-int rescan();
+int rescan(void);
 int inword(char c) ;
 void putch(char ch);
 
@@ -92,7 +91,7 @@ static enum { RESET, RAW, CBREAK } ttystate = RESET;
 void op(size_t inglob)
 {	register int *a1;
 	register char *lp, *sp;
-	char seof, ch;
+	int seof, ch;
 	int t, nl;
 
 	threshold = genbuf + margin;
@@ -155,7 +154,7 @@ normal:
 	if (inglob == 0) { putchr('?'); error;}
 }
 
-int getnil()
+int getnil(void)
 {
 	if(oflag == EOF) return EOF;
 	linebuf[0] = '\0';
@@ -163,7 +162,7 @@ int getnil()
 	return 0;
 }
 
-void setraw()
+void setraw(void)
 {
   /* terminal code from:
      Advanced Programming in the UNIX Environment 2nd edition*/
@@ -191,7 +190,7 @@ void setraw()
     ttysavefd = 0;
 }
 
-void setcook()
+void setcook(void)
 {
    if (ttystate == RESET)
         return;
@@ -220,7 +219,7 @@ int inword(char c)
 	return 0;
 }
 
-int rescan()
+int rescan(void)
 {	register char *lp, *sp;
 
 	if(savethresh) { threshold = savethresh; savethresh = 0; }
@@ -233,17 +232,20 @@ int rescan()
 }
 
 
-int gopen()
+int gopen(void)
 	/*leaves revised line in linebuf,
 	returns 0 if more to follow, EOF if last line */
 {	register char *lp, *sp, *rp;
-	char ch, *br, *pr;
+	int ch;
+	char *br, *pr;
 	int tabs;
 	int retcode, savint, pid, rpid;
+	int render_width;
 
 	lp = lnp;
 	sp = gnp;
 	tabs = 0;
+	render_width = 0;
 	for (rp = genbuf; rp < sp; rp++) if (*rp == CTRLI) tabs =+ TABSET;
 
 	for(;;){
@@ -258,10 +260,38 @@ int gopen()
 				return(EOF);
 
 			case CTRLA:	/* verify line */
-			verify: putstr("\\\r");
+			verify: {
+				int prefix_width = 0;
+				int tail_width = 0;
+				int full_width = 0;
+				int clear_extra = 0;
+				int backspaces = 0;
+				char *tp;
+
+				putstr("\\\r");
 				*sp = '\0';
 				putb(genbuf);
+				putb(lp);
+
+				for (tp = genbuf; tp < sp; tp++)
+					prefix_width += (*tp == CTRLI) ? TABSET : 1;
+				for (tp = lp; *tp; tp++)
+					tail_width += (*tp == CTRLI) ? TABSET : 1;
+
+				full_width = prefix_width + tail_width;
+				if (render_width > full_width) {
+					clear_extra = render_width - full_width;
+					while (clear_extra--)
+						putch(' ');
+					clear_extra = render_width - full_width;
+				}
+
+				backspaces = tail_width + clear_extra;
+				while (backspaces--)
+					putch('\b');
+				render_width = full_width;
 				continue;
+			}
 
 			case CTRLB:	/* back a word */
 				if(sp == genbuf) goto backquery;
@@ -284,6 +314,8 @@ int gopen()
 			case CTRLC:
 			case CTRLQ: /* forward one char */
 				if(*lp == 0) goto backquery;
+				goto forward_echo;
+			forward_echo:
 				putch(*lp);
 			forward:
 				if(*lp == SPACE && sp + tabs > threshold) {
@@ -416,8 +448,7 @@ int gopen()
 			case '#':
 				if( sp == genbuf) goto backquery;
 				if(*(--sp) == CTRLI) tabs =- TABSET;
-				if( ch == CTRLX) goto verify;
-				continue;
+				goto verify;
 
 			case '\n':
 			case '\r': /* split line, actually handled at
@@ -446,8 +477,9 @@ int gopen()
 						}
 				}
 
-			default:	*(--lp) = ch;
-					goto forward;
+			default:
+				*(--lp) = ch;
+				goto forward_echo;
 			}
 
 		if (ch == '\n') { /* split line */
@@ -467,7 +499,7 @@ int gopen()
 
 
 
-int getopen()  /* calls gopen, deals with multiple lines etc. */
+int getopen(void)  /* calls gopen, deals with multiple lines etc. */
 {	register char *lp, *sp;
 	if (oflag == EOF) return EOF;
 
@@ -497,7 +529,7 @@ void putb(char *ptr)	/*display string */
 	write(1,ptr,p-ptr);
 }
 
-void help()
+void help(void)
 {	putstr("\n");
 	putstr("	^A	display Again		^Q	next character");
 	putstr("	^B	backup word		^R	Release margin");
@@ -509,4 +541,3 @@ void help()
 	putstr("	RUBOUT	exit unchanged		@	delete line backward\n");
 	putstr("	Other characters (including RETURN) inserted as typed");
 }
-
