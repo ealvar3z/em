@@ -35,6 +35,10 @@ BUILD
 
     This codebase targets C23. Configure probes for a C23-capable compiler flag.
 
+    For a better interactive command-line experience, you can run em through
+    rlwrap (if installed):
+        rlwrap em
+
 INSTALL
     make install
 
