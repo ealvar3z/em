@@ -1,0 +1,22 @@
+name: Dist Tarball
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  dist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Make distcheck
+        run: make distcheck
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-tarball
+          path: "*.tar.gz"
