@@ -27,18 +27,9 @@ uname -v = #1 SMP PREEMPT_DYNAMIC Mon, 24 Nov 2025 15:21:09 +0000
 /usr/bin/oslevel       = unknown
 /bin/universe          = unknown
 
-PATH: /home/eax/.go/bin/
-PATH: /home/eax/.go/bin/
-PATH: /home/eax/.go/bin/
-PATH: /home/eax/.local/share/mise/installs/node/25.0.0/bin/
-PATH: /home/eax/.local/share/omarchy/bin/
 PATH: /usr/local/sbin/
 PATH: /usr/local/bin/
 PATH: /usr/bin/
-PATH: /usr/lib/jvm/default/bin/
-PATH: /usr/bin/site_perl/
-PATH: /usr/bin/vendor_perl/
-PATH: /usr/bin/core_perl/
 
 
 ## ----------- ##
@@ -69,9 +60,9 @@ configure:2963: checking whether make supports nested variables
 configure:2982: result: yes
 configure:2996: checking xargs -n works
 configure:3012: result: yes
-configure:3097: checking whether UID '1000' is supported by ustar format
+configure:3097: checking whether UID '0' is supported by ustar format
 configure:3103: result: yes
-configure:3110: checking whether GID '1000' is supported by ustar format
+configure:3110: checking whether GID '0' is supported by ustar format
 configure:3116: result: yes
 configure:3124: checking how to create a ustar tar archive
 configure:3135: tar --version
@@ -426,6 +417,7 @@ config.status:857: creating Makefile
 config.status:857: creating src/Makefile
 config.status:857: creating doc/Makefile
 config.status:857: creating config.h
+config.status:1038: config.h is unchanged
 config.status:1086: executing depfiles commands
 config.status:1161: cd src       && sed -e '/# am--include-marker/d' Makefile         | make -f - am--depfiles
 make[1]: Entering directory '/home/eax/repos/em/src'
