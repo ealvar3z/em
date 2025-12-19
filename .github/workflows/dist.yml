@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Bootstrap autotools
+        run: autoreconf -fi
+
       - name: Make distcheck
         run: make distcheck
 
