@@ -38,7 +38,7 @@
 #define PACKAGE "em"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "pierre.gaston@gmail.com"
+#define PACKAGE_BUGREPORT "55966724+ealvar3z@users.noreply.github.com"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "em"

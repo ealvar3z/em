@@ -36,3 +36,6 @@ TAGS
 /doc/modernC.pdf
 /configure~
 /config.h.in~
+
+# Local planning notes
+/TODO.md

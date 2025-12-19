@@ -421,7 +421,7 @@ $config_headers
 Configuration commands:
 $config_commands
 
-Report bugs to <pierre.gaston@gmail.com>."
+Report bugs to <55966724+ealvar3z@users.noreply.github.com>."
 
 ac_cs_config=''
 ac_cs_version="\
@@ -696,7 +696,7 @@ S["program_transform_name"]="s,x,x,"
 S["prefix"]="/usr/local"
 S["exec_prefix"]="${prefix}"
 S["PACKAGE_URL"]=""
-S["PACKAGE_BUGREPORT"]="pierre.gaston@gmail.com"
+S["PACKAGE_BUGREPORT"]="55966724+ealvar3z@users.noreply.github.com"
 S["PACKAGE_STRING"]="em 1.1.0"
 S["PACKAGE_VERSION"]="1.1.0"
 S["PACKAGE_TARNAME"]="em"
@@ -749,7 +749,7 @@ D["PACKAGE_NAME"]=" \"em\""
 D["PACKAGE_TARNAME"]=" \"em\""
 D["PACKAGE_VERSION"]=" \"1.1.0\""
 D["PACKAGE_STRING"]=" \"em 1.1.0\""
-D["PACKAGE_BUGREPORT"]=" \"pierre.gaston@gmail.com\""
+D["PACKAGE_BUGREPORT"]=" \"55966724+ealvar3z@users.noreply.github.com\""
 D["PACKAGE_URL"]=" \"\""
 D["PACKAGE"]=" \"em\""
 D["VERSION"]=" \"1.1.0\""
